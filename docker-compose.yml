@@ -1,5 +1,4 @@
 version: "3.8"
-
 services:
   zoo1:
     image: confluentinc/cp-zookeeper:7.3.2
@@ -13,7 +12,6 @@ services:
       ZOOKEEPER_SERVERS: zoo1:2888:3888
     networks:
       - backend
-
   kafka1:
     image: confluentinc/cp-kafka:7.3.2
     hostname: kafka1
@@ -40,8 +38,7 @@ services:
       - zoo1
     networks:
       - backend
-
-  passengerDb:
+  passengerdb:
     image: postgres:13
     ports:
       - "5437:5432"
@@ -55,7 +52,7 @@ services:
     networks:
       - backend
 
-  mongoDb:
+  mongodb:
     image: mongo
     restart: always
     ports:
@@ -66,14 +63,11 @@ services:
     networks:
       - backend
 
-  eurekaServer:
-    build: ./eureka-server
+  eurekaserver:
+    build: eureka-server
     restart: on-failure
     ports:
       - "8761:8761"
-    environment:
-      SERVER_PORT: 8761
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka1:19092
     depends_on:
       - kafka1
       - zoo1
@@ -81,69 +75,40 @@ services:
       - backend
 
   passenger-service:
-    build: ./passenger-management-service
+    build: passenger-management-service
     restart: on-failure
     ports:
       - "8083:8083"
-    environment:
-      SPRING_APPLICATION_NAME: passenger-management-service
-      SERVER_PORT: 8083
-      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eurekaServer:8761/eureka
-      SPRING_DATASOURCE_URL: jdbc:postgresql://passengerDb:5432/passenger
-      SPRING_DATASOURCE_USERNAME: passenger
-      SPRING_DATASOURCE_PASSWORD: passenger123
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     depends_on:
-      - passengerDb
-      - eurekaServer
+      - passengerdb
+      - eurekaserver
     networks:
       - backend
 
   trip-service:
-    build: ./trip-management-service
+    build: trip-management-service
     restart: on-failure
     ports:
       - "8081:8081"
-    environment:
-      SERVER_PORT: 8081
-      SPRING_APPLICATION_NAME: trip-management-service
-      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://0.0.0.0:8761/eureka
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka1:19092
-      SPRING_DATA_MONGODB_HOST: mongoDb
-      SPRING_DATA_MONGODB_PORT: 27017
-      SPRING_DATA_MONGODB_USERNAME: altinhysa84
-      SPRING_DATA_MONGODB_PASSWORD: 15uxQqzEEtmH6HB0
     depends_on:
       - kafka1
       - zoo1
-      - eurekaServer
-      - mongoDb
+      - eurekaserver
+      - mongodb
     networks:
       - backend
 
   email-service:
-    build: ./email-service
+    build: email-service
     restart: on-failure
     ports:
       - "8082:8082"
-    environment:
-      SERVER_PORT: 8082
-      SPRING_APPLICATION_NAME: email-service
-      EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE: http://eurekaServer:8761/eureka
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka1:19092
-      SPRING_MAIL_HOST: smtp.gmail.com
-      SPRING_MAIL_PORT: 587
-      SPRING_MAIL_USERNAME: altinhysa84@gmail.com
-      SPRING_MAIL_PASSWORD: yygkiyyarebpdjzi
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: true
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: true
     depends_on:
       - kafka1
       - zoo1
-      - eurekaServer
+      - eurekaserver
     networks:
       - backend
 
 networks:
   backend:
-    driver: bridge
