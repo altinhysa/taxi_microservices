@@ -52,20 +52,25 @@ services:
     networks:
       - backend
 
-  mongodb:
-    image: mongo
+  mongoDb:
+    image: mongo:latest
     restart: always
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: altinhysa84
-      MONGO_INITDB_ROOT_PASSWORD: 15uxQqzEEtmH6HB0
+      MONGO_INITDB_ROOT_USERNAME: altin
+      MONGO_INITDB_ROOT_PASSWORD: altin
     networks:
       - backend
 
   eurekaserver:
     build: eureka-server
     restart: on-failure
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://eurekaserver:8761" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     ports:
       - "8761:8761"
     depends_on:
@@ -84,7 +89,8 @@ services:
       - eurekaserver
     networks:
       - backend
-
+    links:
+      - eurekaserver
   trip-service:
     build: trip-management-service
     restart: on-failure
@@ -94,9 +100,12 @@ services:
       - kafka1
       - zoo1
       - eurekaserver
-      - mongodb
+      - mongoDb
     networks:
       - backend
+    links:
+      - mongoDb
+      - eurekaserver
 
   email-service:
     build: email-service
@@ -104,11 +113,11 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - kafka1
-      - zoo1
-      - eurekaserver
+      eurekaserver:
+        condition: service_healthy
     networks:
       - backend
-
+    links:
+      - eurekaserver
 networks:
   backend:
