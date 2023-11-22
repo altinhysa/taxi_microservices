@@ -85,8 +85,10 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - passengerdb
-      - eurekaserver
+      eurekaserver:
+        condition: service_healthy
+      passengerdb:
+        condition: service_started
     networks:
       - backend
     links:
@@ -97,10 +99,14 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - kafka1
-      - zoo1
-      - eurekaserver
-      - mongoDb
+      eurekaserver:
+          condition: service_healthy
+      kafka1:
+        condition: service_started
+      zoo1:
+        condition: service_started
+      mongoDb:
+        condition: service_started
     networks:
       - backend
     links:
@@ -115,6 +121,10 @@ services:
     depends_on:
       eurekaserver:
         condition: service_healthy
+      kafka1:
+        condition: service_started
+      zoo1:
+        condition: service_started
     networks:
       - backend
     links:
