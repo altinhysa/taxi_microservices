@@ -1,6 +1,6 @@
 # Taxi_Microservices
 
-![Microservices diagram](https://i.imgur.com/bkzpvWC.png)
+![Microservices diagram](https://i.imgur.com/94kdIH2.png)
 
 This project is a microservice-based application that manages passengers and their trips. It consists of the following microservices:
 
